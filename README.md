@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+## Work in Progress
 
 You can use the [editor on GitHub](https://github.com/BurgerBecker/rg-benchmarker/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
