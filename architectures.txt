@@ -1,0 +1,22 @@
+# Document contains the architectures and their hyperparameters that will be run
+#convXpress,1e-3,16
+convXpress,1e-4,16
+conv4,1e-5,16
+vgg16_d_real,1e-5,16
+##vgg16_d_real_same,1e-5,16
+alexnet_real_do_seed,1e-5,16
+alexnet_adapted,1e-5,16
+##alexnet_adapted,1e-4,16
+##alexnet_real_do_seed,1e-3,16
+##alexnet_real_do_seed,1e-5,16
+simple,1e-3,16
+mcrgnet,1e-3,16
+hosenie,1e-4,16
+atlas,1e-4,16
+fr_deep_real,1e-4,16
+##fr_deep_real_same,1e-4,16
+first_class,1e-4,16
+radio_galaxy_zoo,1e-4,16
+##radio_galaxy_zoo_same,1e-3,16
+toothless_real,1e-5,16
+conv8,1e-4,16

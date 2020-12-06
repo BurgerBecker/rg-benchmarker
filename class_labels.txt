@@ -1,0 +1,5 @@
+Label,Class
+1,COMP
+2,FRI
+3,FRII
+4,BENT

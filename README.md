@@ -1,37 +1,55 @@
-## Work in Progress
+## CNN Comparison Framework for Radio Galaxy Classification
 
-You can use the [editor on GitHub](https://github.com/BurgerBecker/rg-benchmarker/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+This framework serves as a testbed to train and compare different CNNs for radio galaxy classification.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+The quickstart guide will help you train ConvXpress, the novel classifier developed during this project. 
 
-### Markdown
+Given the same seeds for the random processes as was used during training, you _should_ see the same results as we got for ConvXpress. The results recorded in the article are averaged from three runs (seeds 8901, 1826 and 4915). If you do not reproduce the same average results, please email me the training logs: adolfburgerbecker@gmail.com
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### Quickstart
 
-```markdown
-Syntax highlighted code block
+You'll need at least 8.47 GB of free disk space and this assumes GPU availability. If no GPU is available, see the [Deepo CPU version](https://github.com/ufoym/deepo#cpu-version) guide.
 
-# Header 1
-## Header 2
-### Header 3
+0. Before you start, please follow these steps
+	0. Make a new directory/folder for this project. We'll refer to this as the project directory.
+	1. Download the FITS image data (*Warning: the uncompressed size is about 5.3GB*): https://drive.google.com/drive/folders/12AUrQ2aA1jpFD9ObRJQWSZ5If2Mm8Jfe?usp=sharing
+	2. Clone this repo: 
 
-- Bulleted
-- List
+```git clone https://github.com/BurgerBecker/rg-benchmarker.git```
 
-1. Numbered
-2. List
+1. Install [Docker](https://docs.docker.com/engine/install/) and [nvidia-docker](https://github.com/NVIDIA/nvidia-docker)
 
-**Bold** and _Italic_ and `Code` text
+2. Obtain the [Deepo](https://github.com/ufoym/deepo) Docker image:
 
-[Link](url) and ![Image](src)
-```
+```docker pull ufoym/deepo```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+3. Then run the docker container with an interactive shell, change `<insert_custom_label>` to a unique label for the container and `<project_directory>` to the new directory discussed in item 0.:
 
-### Jekyll Themes
+```docker run --gpus all -it -l <insert_custom_label> ufoym/deepo -v <project_directory>:stored bash```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/BurgerBecker/rg-benchmarker/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+4. Change directory into the `stored/rg-benchmarker/` directory.
 
-### Support or Contact
+5. Run the quickstart Python script. This will first augment your data and then start training ConvPress, after which the model will be tested.
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Final results will be in the last lines of the log file.
+
+```python3 quickstart.py -a convxpress.txt -s 8901 >> log.txt```
+
+<!-- 
+Build the Dockerfile[^1] with the following command (this might take a while):
+
+```docker build --tag something-something```
+
+This built a Docker image. You can now run an instance of this image (called a Docker container):
+*UPDATE THIS*
+```docker run ```
+
+You should now see a Linux terminal. Change directory into `rg-benchmarker`. Run the following command:
+*UPDATE THIS*
+```python3 quickstart.py >> log.txt```
+
+This will first augment your data and then start training, after which the results will be tested.
+
+Final results will be in the last lines of the file.
+
+[^1]: The Dockerfile will mount the FITS folder (so don't change the name) and will eventually use it to save augmentations on disk (which will use an additional 3.169 GB). This is useful when training all the models, since they reuse the same data and it saves quite a bit of time and compute. This is probably less useful when training a single model, since this will generate and save 24 augmented images for each of the 350 training/validation images. That's 24 x 350 x 377.3 KB = 3.169 GB on top of the existing 5.3GB. -->
