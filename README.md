@@ -25,7 +25,7 @@ You'll need at least 8.47 GB of free disk space and this assumes GPU availabilit
 
 3. Then run the docker container with an interactive shell, change `<insert_custom_label>` to a unique label for the container and `<project_directory>` to the new directory discussed in item 0.:
 
-```docker run --gpus all -it -l <insert_custom_label> ufoym/deepo -v <project_directory>:stored bash```
+```docker run -it --gpus=all --name="<insert_custom_name>" -l "<insert_custom_label>" -v "<project_directory>:/stored" ufoym/deepo bash```
 
 4. Change directory into the `stored/rg-benchmarker/` directory.
 
@@ -35,7 +35,7 @@ Final results will be in the last lines of the log file. The argument after `-a`
 
 ```python3 quickstart.py -a convxpress.txt -s 8901 >> log.txt```
 
-To replicate the results exactly, run the above line with 1826 and 4915 as seed values and take the average thereof.
+To replicate the results exactly, run the above line with 1826 and 4915 as seed values and take the average of the three runs.
 
 <!-- 
 Build the Dockerfile[^1] with the following command (this might take a while):
