@@ -29,9 +29,6 @@ import json
 import os.path
 
 def main(argv):
-    MNIST_test = False
-    only_test = "False"
-    bin_thresh = False
     short_options = "hs:r:a:p:d:m:t:v:i:o:f:x:c:"
     long_options = ["help", "seed=", "rotate=", "architectures=", "results_path=", "data_path=", "model_path=", "train_size=", "val_size=", "img_size=","only_test=","data_manifest=","mnist=","number_classes="]
     argument_list = argv[1:]
@@ -45,8 +42,8 @@ def main(argv):
     rotate_factor = 15
     seed = 8901
     architectures_file = "architectures.txt"
-    results_path = "rg_class_experiment_results/"
-    data_path = "FITS/"
+    results_path = "rg_results/"
+    data_path = "../FITS/"
     model_path = "models/"
     train_size = 250
     val_size = 100
@@ -98,105 +95,6 @@ def main(argv):
                 MNIST_test = False
             else:
                 MNIST_test = True
-    # if len(argv) == 1:
-    #     print("No arguments given, default random seed (8901), rotation factor (15 deg) and architectures file will be used.")
-    #     rotate_factor = 15
-    #     seed = 1826#8901
-    #     architectures_file = "architectures.txt"
-    #     results_path = "rg_class_experiment_results/"
-    #     data_path = "FITS_300/"
-    #     model_path = "models/"
-    #     train_size = 250
-    #     val_size = 100
-    #     img_rows = 300
-    #     img_cols = 300
-    #     # Manifest is a list of files and their classes
-    #     data_manifest = "unLRG_manifest.csv"
-    # elif len(argv) == 12:
-    #     seed = int(argv[1])
-    #     rotate_factor = int(argv[2])
-    #     architectures_file = argv[3]
-    #     results_path = argv[4]
-    #     data_path = argv[5]
-    #     model_path = argv[6]
-    #     data_manifest = argv[7]
-    #     train_size = int(argv[8])
-    #     val_size = int(argv[9])
-    #     img_rows = int(argv[10])
-    #     img_cols = img_rows
-    #     bin_thresh = argv[11]
-    # elif len(argv) == 2:
-    #     if argv[1] == "mnist":
-    #         MNIST_test = True
-    #     elif argv[1] == "test":
-    #         only_test = "default"
-    #         rotate_factor = 15
-    #         seed = 8901
-    #         architectures_file = "architectures.txt"
-    #         results_path = "rg_class_experiment_results/"
-    #         data_path = "FITS_300/"
-    #         model_path = "models/"
-    #         train_size = 250
-    #         val_size = 100
-    #         img_rows = 300
-    #         img_cols = 300
-    #         # Manifest is a list of files and their classes
-    #         data_manifest = "unLRG_manifest.csv"
-    #     elif argv[1] == "time":
-    #         only_test = "time"
-    #         rotate_factor = 15
-    #         seed = 8901
-    #         architectures_file = "architectures.txt"
-    #         results_path = "rg_class_experiment_results/"
-    #         data_path = "FITS_300/"
-    #         model_path = "models/"
-    #         train_size = 250
-    #         val_size = 100
-    #         img_rows = 300
-    #         img_cols = 300
-    #         # Manifest is a list of files and their classes
-    #         data_manifest = "unLRG_manifest.csv"
-    # elif len(argv) == 3 or len(argv) == 4:
-    #     rotate_factor = 15
-    #     architectures_file = "architectures.txt"
-    #     results_path = "result_unLRG/"
-    #     data_path = "FITS_300/"
-    #     model_path = "models/"
-    #     train_size = 250
-    #     val_size = 100
-    #     data_manifest = "unLRG_manifest.csv"
-    #     img_rows = 300
-    #     img_cols = 300
-    #     if argv[1] == "train":
-    #         seed = int(argv[2])
-    #         if len(argv) == 4:
-    #             bin_thresh = argv[3]
-    #     elif argv[1] == "test":
-    #         only_test = "default"
-    #         seed = int(argv[2])
-    # elif len(argv) == 7:
-    #     rotate_factor = 15
-    #     architectures_file = "architectures.txt"
-    #     results_path = "result_unLRG/"
-    #     data_path = "FITS_300/"
-    #     model_path = "models/"
-    #     train_size = 250
-    #     val_size = 100
-    #     data_manifest = "unLRG_manifest.csv"
-    #     img_rows = 300
-    #     img_cols = 300
-    #     if argv[1] == "train":
-    #         seed = int(argv[2])
-    #     elif argv[1] == "test":
-    #         only_test = "default"
-    #         seed = int(argv[2])
-    #         model_path = argv[3]
-    #         results_path = argv[4]
-    #         train_size = int(argv[5])
-    #         val_size = int(argv[6])
-    # else:
-    #     print("Expected 3 inputs: random seed (e.g. 8901), rotation factor (e.g. 10) and the architectures file.")
-    #     sys.exit(0)
     
     print("Splitting train/validation/test data...")
     data_name = data_manifest.split(".")

@@ -31,9 +31,11 @@ You'll need at least 8.47 GB of free disk space and this assumes GPU availabilit
 
 5. Run the quickstart Python script. This will first augment your data and then start training ConvPress, after which the model will be tested.
 
-Final results will be in the last lines of the log file.
+Final results will be in the last lines of the log file. The argument after `-a` gives the file with the list of architectures, their learning rates and number of epochs to run them. The argument after `-s` gives the random seed to be used.
 
 ```python3 quickstart.py -a convxpress.txt -s 8901 >> log.txt```
+
+To replicate the results exactly, run the above line with 1826 and 4915 as seed values and take the average thereof.
 
 <!-- 
 Build the Dockerfile[^1] with the following command (this might take a while):
