@@ -1,0 +1,13 @@
+#!/bin/sh
+
+python3 run_loss_logger.py test 1826 models_LRG
+python3 run_loss_logger.py test 4915 models_LRG
+python3 run_loss_logger.py test 8901 models
+python3 run_loss_logger.py test 1826 models
+python3 run_loss_logger.py test 4915 models
+# python3 quick_start.py test 1826 models_LRG results_overfit 0 0 >> overfit_log.txt
+# python3 quick_start.py test 4915 models_LRG results_overfit 0 0 >> overfit_log.txt
+
+# python3 quick_start.py 8901 15 architectures.txt results_bin FITS_bin models_bin unLRG_manifest.csv 250 100 300 True > log_bin_thresh.txt
+# python3 quick_start.py 1826 15 architectures.txt results_LRG FITS_LRG models_LRG LRG_manifest.csv 80 60 300 > log_LRG_1826.txt
+# python3 quick_start.py 4915 15 architectures.txt results_LRG FITS_LRG models_LRG LRG_manifest.csv 80 60 300 > log_LRG_4915.txt

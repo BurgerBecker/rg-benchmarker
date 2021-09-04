@@ -1,7 +1,7 @@
 from os import listdir
 from os.path import isfile, join
 from sklearn.preprocessing import MinMaxScaler
-import keras
+import tensorflow.keras
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Activation, Add, Conv2D, Dense, Dropout, Flatten, Input, LeakyReLU, MaxPooling2D, BatchNormalization
 # from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
