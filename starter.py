@@ -1,23 +1,23 @@
-'''
-This script will train and test all the models specified in the architectures file on the data specified in data_path and in the data manifest.
-The train/validation/test splits is made based on the train_size and val_size arguments. Sources are randomly selected, depending on the random seed given.
-If you'd like to train on a specific subset, create a manifest with only those items in and
+# '''
+# This script will train and test all the models specified in the architectures file on the data specified in data_path and in the data manifest.
+# The train/validation/test splits is made based on the train_size and val_size arguments. Sources are randomly selected, depending on the random seed given.
+# If you'd like to train on a specific subset, create a manifest with only those items in and
 
--h --help           --  Displays this docstring.
--a --architectures  --  Path to and filename of the list of architectures you wish to train. Make sure the architectures listed have been described in the model_architectures.py file.
--c --num_classes    --  Number of classes. Default is 4.
--d --data_path      --  Path to the all the data, split into subdirectories per class.
--f --data_manifest  --  Data manifest that contains the file name and class label of all the images that will be used.
--i --img_size       --  Image size as a single int or two ints seperated by a comma for rows and columns. Default is 300,300.
--m --model_path     --  Path to where the resulting models will be stored or new models will be loaded.
--o --only_test      --  Boolean value to set whether to only test the model given. Default value is False.
--p --results_path   --  Path to where the results will be stored.
--r --rotate         --  The increments in degrees by which each individual image will be rotated. Default value is 15 degrees, leading to 360/15 = 24 augmentations per image.
--s --seed           --  The random seed number for to ensure random processes are reproducible given the same seed. Used for weight init as well.
--t --train_size     --  Size of the training set in number of original images. Integer, default value is 250.
--v --val_size       --  Size of the validation set in number of original images. Integer, default value is 100.
--X --mnist          --  Trains the models on MNIST data
-'''
+# -h --help           --  Displays this docstring.
+# -a --architectures  --  Path to and filename of the list of architectures you wish to train. Make sure the architectures listed have been described in the model_architectures.py file.
+# -c --num_classes    --  Number of classes. Default is 4.
+# -d --data_path      --  Path to the all the data, split into subdirectories per class.
+# -f --data_manifest  --  Data manifest that contains the file name and class label of all the images that will be used.
+# -i --img_size       --  Image size as a single int or two ints seperated by a comma for rows and columns. Default is 300,300.
+# -m --model_path     --  Path to where the resulting models will be stored or new models will be loaded.
+# -o --only_test      --  Boolean value to set whether to only test the model given. Default value is False.
+# -p --results_path   --  Path to where the results will be stored.
+# -r --rotate         --  The increments in degrees by which each individual image will be rotated. Default value is 15 degrees, leading to 360/15 = 24 augmentations per image.
+# -s --seed           --  The random seed number for to ensure random processes are reproducible given the same seed. Used for weight init as well.
+# -t --train_size     --  Size of the training set in number of original images. Integer, default value is 250.
+# -v --val_size       --  Size of the validation set in number of original images. Integer, default value is 100.
+# -X --mnist          --  Trains the models on MNIST data
+# '''
 import sys, getopt
 from downloads import download_unLRG, download_LRG
 from read_architectures import read_architectures
@@ -31,89 +31,98 @@ import os
 import argparse
 
 def main(argv):
-    parser = argparse.ArgumentParser(description="Locate objects in a live camera stream using an object detection DNN.", 
+    parser = argparse.ArgumentParser(description="Train and compare different architectures to each other on radio galaxy images.", 
                                  formatter_class=argparse.RawTextHelpFormatter)
-    # parser.add_argument("input_URI", type=str, default="", nargs='?', help="URI of the input stream")
-    # parser.add_argument("output_URI", type=str, default="", nargs='?', help="URI of the output stream")
     parser.add_argument("--seed", type=int, default="1826", help="Random seed to initialize")
     parser.add_argument("--model_path", type=str, default="models_corrections/", help="Path to models")
+    parser.add_argument("--data_path", type=str, default="FITS_300/", help="Path to images")
     parser.add_argument("--final", type=bool, default=True, help="Final model or best validation")
     parser.add_argument("--results_path", type=str, default="rg_results_corrections/", help="Path to results")
-    parser.add_argument("--bin_thresh", type=bool, default=False, help="Binary threshold of images")    
+    parser.add_argument("--bin_thresh", type=bool, default=False, help="Binary threshold of images") 
+    parser.add_argument("--test", type=bool, default=False, help="Only test the models")
+    parser.add_argument("--rotate", type=int, default=15, help="Angle of rotational augmentation") 
+    parser.add_argument("--train_size", type=int, default=250, help="Training set size") 
+    parser.add_argument("--val_size", type=int, default=100, help="Validation set size") 
+    parser.add_argument("--img_rows", type=int, default=300, help="Image row size") 
+    parser.add_argument("--img_cols", type=int, default=300, help="Image column size")
+    parser.add_argument("--dataset", type=str, default="unLRG", help="Dataset to run on")
+    parser.add_argument("--architectures_file", type=str, default="architectures.txt", help="File with list of architectures to train or test")    
+    parser.add_argument("--num_classes", type=int, default=4, help="Number of classes to be classified")
+
     try:
         opt = parser.parse_known_args()[0]
     except:
         print("")
         parser.print_help()
         sys.exit(0)
-    short_options = "hs:r:a:p:d:m:t:v:i:o:f:x:c:"
-    long_options = ["help", "seed=", "rotate=", "architectures=", "results_path=", "data_path=", "model_path=", "train_size=", "val_size=", "img_size=","only_test=","data_manifest=","mnist=","number_classes="]
-    argument_list = argv[1:]
-    try:
-        arguments, values = getopt.getopt(argument_list, short_options, long_options)
-    except getopt.error as err:
-        # Output error, and return with an error code
-        print (str(err))
-        sys.exit(2)
-    print(arguments)
-    rotate_factor = 15
+    rotate_factor = opt.rotate
     seed = opt.seed
-    architectures_file = "architectures.txt"
+    architectures_file = opt.architectures_file
     results_path = opt.results_path
     os.system("mkdir -p " + results_path)
-    data_path = "FITS_300/"
+    data_path = opt.data_path
     model_path = opt.model_path
     os.system("mkdir -p " + model_path)
-    train_size = 250
-    val_size = 100
-    img_rows = 300
-    img_cols = 300
-    num_classes = 4
+    train_size = opt.train_size
+    val_size = opt.val_size
+    img_rows = opt.img_rows
+    img_cols = opt.img_cols
+    num_classes = opt.num_classes
     # Manifest is a list of files and their classes
-    data_manifest = "unLRG_manifest.csv"
-    only_test = False
-    MNIST_test = False
-    for current_argument, current_value in arguments:
-        if current_argument in ("-a","--architectures"):
-            architectures_file = current_value
-        elif current_argument in ("-c","--num_classes"):
-            num_classes = int(current_value)
-        elif current_argument in ("-d","--data_path"):
-            data_path = current_value
-        elif current_argument in ("-f", "--data_manifest"):
-            data_manifest = current_value
-        elif current_argument in ("-h", "--help"):
-            print(__doc__)
-        elif current_argument in ("-i","--img_size"):
-            current_value = current_value.rstrip("()[]")
-            if ',' in current_value:
-                x = current_value.split(',')
-                img_rows = int(x[0])
-                img_cols = int(x[1])
-            else:
-                img_rows = int(current_value)
-        elif current_argument in ("-m", "--model_path"):
-            model_path = current_value
-        elif current_argument in ("-o", "--only_test"):
-            if current_value == "False":
-                only_test = False
-            else:
-                only_test = True
-        elif current_argument in ("-p", "--results_path"):
-            results_path = current_value
-        elif current_argument in ("-r","--rotate"):
-            rotate_factor = int(current_value)
-        elif current_argument in ("-s","--seed"):
-            seed = int(current_value)
-        elif current_argument in ("-t","--train_size"):
-            train_size = int(current_value)
-        elif current_argument in ("-v", "--val_size"):
-            val_size = int(current_value)
-        elif current_argument in ("-X", "--mnist"):
-            if current_value == "False":
-                MNIST_test = False
-            else:
-                MNIST_test = True
+    if opt.data == "unLRG_manifest":
+        data_manifest = "unLRG_manifest.csv"
+    elif opt.data == "unLRG_manifest":
+         data_manifest = "LRG_manifest.csv"
+    elif opt.data == "MNIST":
+        MNIST_test = True
+        num_classes = 10
+    elif opt.data_manifest != "unset":
+        data_manifest = opt.data_manifest
+    else:
+        print("Please set the data manifest (list of files and their respective classes in CSV format)")
+        sys.exit(0)
+    only_test = opt.test
+    # for current_argument, current_value in arguments:
+    #     if current_argument in ("-a","--architectures"):
+    #         architectures_file = current_value
+    #     elif current_argument in ("-c","--num_classes"):
+    #         num_classes = int(current_value)
+    #     elif current_argument in ("-d","--data_path"):
+    #         data_path = current_value
+    #     elif current_argument in ("-f", "--data_manifest"):
+    #         data_manifest = current_value
+    #     elif current_argument in ("-h", "--help"):
+    #         print(__doc__)
+    #     elif current_argument in ("-i","--img_size"):
+    #         current_value = current_value.rstrip("()[]")
+    #         if ',' in current_value:
+    #             x = current_value.split(',')
+    #             img_rows = int(x[0])
+    #             img_cols = int(x[1])
+    #         else:
+    #             img_rows = int(current_value)
+    #     elif current_argument in ("-m", "--model_path"):
+    #         model_path = current_value
+    #     elif current_argument in ("-o", "--only_test"):
+    #         if current_value == "False":
+    #             only_test = False
+    #         else:
+    #             only_test = True
+    #     elif current_argument in ("-p", "--results_path"):
+    #         results_path = current_value
+    #     elif current_argument in ("-r","--rotate"):
+    #         rotate_factor = int(current_value)
+    #     elif current_argument in ("-s","--seed"):
+    #         seed = int(current_value)
+    #     elif current_argument in ("-t","--train_size"):
+    #         train_size = int(current_value)
+    #     elif current_argument in ("-v", "--val_size"):
+    #         val_size = int(current_value)
+    #     elif current_argument in ("-X", "--mnist"):
+    #         if current_value == "False":
+    #             MNIST_test = False
+    #         else:
+    #             MNIST_test = True
     
     print("Splitting train/validation/test data...")
     data_name = data_manifest.split(".")
