@@ -17,6 +17,7 @@ from read_architectures import get_class_label
 from astropy.io import fits
 import tensorflow.keras.datasets.mnist as mnist
 import time
+import matplotlib.pyplot as plt
 
 def get_lr_metric(optimizer):
     def lr(y_true, y_pred):
@@ -191,11 +192,31 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     model.compile(optimizer=opt,
         loss=loss_fn,
         metrics=['accuracy',lr_metric])
-    model.fit(training_generator, validation_data=validation_generator, epochs=EP,callbacks=[mcp_save,reduce_lr],verbose=2)
-    test_generator = DataGenerator(partition["test"], labels, data_path, label_map, SEED, tf.keras.backend.image_data_format(), img_rows=img_rows, img_cols=img_cols,shuffle=False,batch_size=32)
+    history = model.fit(training_generator, validation_data=validation_generator, epochs=EP,callbacks=[mcp_save,reduce_lr],verbose=2)
+    # test_generator = DataGenerator(partition["test"], labels, data_path, label_map, SEED, tf.keras.backend.image_data_format(), img_rows=img_rows, img_cols=img_cols,shuffle=False,batch_size=32)
     model.save(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'_final.h5')
-    print(model.evaluate(test_generator, verbose=2))
-    print()
+    # print(model.evaluate(test_generator, verbose=2))
+    print("Losses")
+    print(history.history['loss'])
+    print(history.history['val_loss'])
+    plt.plot(history.history['loss'],color='b')
+    plt.plot(history.history['val_loss'],color='r')
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig("loss_images/"+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+"_loss.png")
+    plt.show()
+    plt.clf()
+    plt.plot(history.history['accuracy'],color='b')
+    plt.plot(history.history['val_accuracy'],color='r')
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig("loss_images/"+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+"_acc.png")
+    plt.show()
+    plt.clf()
 
 def test(model_name,architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols, final=False):
     LR = float(architecture[0])

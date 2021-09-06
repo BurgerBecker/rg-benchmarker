@@ -23,11 +23,11 @@ from downloads import download_unLRG, download_LRG
 from read_architectures import read_architectures
 from results import generate_figures
 from make_splits import make_splits
-# from train_test import train, test, train_mnist, test_mnist, time_test
-from get_model_loss import test
+from train_test import train, test, train_mnist, test_mnist, time_test
 import numpy as np
 import json
 import os.path
+import os
 import argparse
 
 def main(argv):
@@ -36,8 +36,10 @@ def main(argv):
     # parser.add_argument("input_URI", type=str, default="", nargs='?', help="URI of the input stream")
     # parser.add_argument("output_URI", type=str, default="", nargs='?', help="URI of the output stream")
     parser.add_argument("--seed", type=int, default="1826", help="Random seed to initialize")
-    parser.add_argument("--model_path", type=str, default="models/", help="Path to models")
+    parser.add_argument("--model_path", type=str, default="models_corrections/", help="Path to models")
     parser.add_argument("--final", type=bool, default=True, help="Final model or best validation")
+    parser.add_argument("--results_path", type=str, default="rg_results_corrections/", help="Path to results")
+    parser.add_argument("--bin_thresh", type=bool, default=False, help="Binary threshold of images")    
     try:
         opt = parser.parse_known_args()[0]
     except:
@@ -46,7 +48,6 @@ def main(argv):
         sys.exit(0)
     short_options = "hs:r:a:p:d:m:t:v:i:o:f:x:c:"
     long_options = ["help", "seed=", "rotate=", "architectures=", "results_path=", "data_path=", "model_path=", "train_size=", "val_size=", "img_size=","only_test=","data_manifest=","mnist=","number_classes="]
-    print(argv)
     argument_list = argv[1:]
     try:
         arguments, values = getopt.getopt(argument_list, short_options, long_options)
@@ -58,9 +59,11 @@ def main(argv):
     rotate_factor = 15
     seed = opt.seed
     architectures_file = "architectures.txt"
-    results_path = "rg_results/"
+    results_path = opt.results_path
+    os.system("mkdir -p " + results_path)
     data_path = "FITS_300/"
     model_path = opt.model_path
+    os.system("mkdir -p " + model_path)
     train_size = 250
     val_size = 100
     img_rows = 300
@@ -70,7 +73,6 @@ def main(argv):
     data_manifest = "unLRG_manifest.csv"
     only_test = False
     MNIST_test = False
-    print(arguments)
     for current_argument, current_value in arguments:
         if current_argument in ("-a","--architectures"):
             architectures_file = current_value
@@ -117,7 +119,7 @@ def main(argv):
     data_name = data_manifest.split(".")
     # Creates 2 dictionaries: one for train/val/test and one for class labels
     if os.path.isfile("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json") == False:
-        partition, labels = make_splits(rotate_factor, data_path, data_manifest, seed, train_size=train_size, val_size=val_size, img_rows = img_rows, img_cols = img_cols, bin_thresh= bin_thresh)
+        partition, labels = make_splits(rotate_factor, data_path, data_manifest, seed, train_size=train_size, val_size=val_size, img_rows = img_rows, img_cols = img_cols, bin_thresh= opt.bin_thresh)
         json.dump(partition, open("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
         json.dump(labels, open("labels_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
     else:
@@ -129,8 +131,56 @@ def main(argv):
     # Train and test
     for arch in architectures.keys():
         dictionary_temp = {}        
-        train_results, val_results = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols, final=opt.final)
-        results_dict[arch] = [train_results,val_results]
+        if MNIST_test == True:
+            train_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch] = dictionary_temp
+            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols,final=True)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch+"_final"] = dictionary_temp
+        elif only_test == False:
+            train(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch] = dictionary_temp
+            cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols,final=True)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch+"_final"] = dictionary_temp
+        elif only_test == True:
+            cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch] = dictionary_temp
+            cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols,final=True)
+            dictionary_temp["MPCA"] = mpca
+            dictionary_temp["Norm. Confusion Matrix"] = ncm
+            dictionary_temp["Confusion Matrix"] = cm
+            dictionary_temp["Time"] = time_dif
+            results_dict[arch+"_final"] = dictionary_temp
+        elif only_test == "time":
+            time_arr, ips_arr, time_dif, time_std, ips, ips_std = time_test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            dictionary_temp["IPS"] = ips
+            dictionary_temp["Time"] = time_dif
+            dictionary_temp["T_arr"] = time_arr
+            dictionary_temp["IPS_arr"] = ips_arr
+            dictionary_temp["Time_std"] = time_std
+            dictionary_temp["IPS_std"] = ips_std
+            results_dict[arch] = dictionary_temp
     print(results_dict)
     # Make plots
     # generate_figures(results_dict, results_path, partition, labels)

@@ -67,7 +67,7 @@ def test(model_name,architecture, SEED, results_path, data_path, model_path, par
     print(train_results)
     print(val_results)
     print(train_results[0]/val_results[0])
-    f = open("loss_logging_trainvsval.txt","a")
+    f = open("loss_log_trainvsval2.txt","a")
     f.write(model_name+'_final'+','+str(train_results[0])+','+str(val_results[0])+'\n')
     f.close()
     return train_results, val_results

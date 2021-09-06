@@ -1,10 +1,10 @@
 #!/bin/sh
 
-python3 run_loss_logger.py test 1826 models_LRG
-python3 run_loss_logger.py test 4915 models_LRG
-python3 run_loss_logger.py test 8901 models
-python3 run_loss_logger.py test 1826 models
-python3 run_loss_logger.py test 4915 models
+#python3 run_loss_logger.py test --seed=1826 --model_path=models_LRG
+#python3 run_loss_logger.py test --seed=4915 --model_path=models_LRG
+python3 run_loss_logger.py test --seed=8901 --model_path=models/ --final=False
+python3 run_loss_logger.py test --seed=1826 --model_path=models/ --final=False
+python3 run_loss_logger.py test --seed=4915 --model_path=models/ --final=False
 # python3 quick_start.py test 1826 models_LRG results_overfit 0 0 >> overfit_log.txt
 # python3 quick_start.py test 4915 models_LRG results_overfit 0 0 >> overfit_log.txt
 
