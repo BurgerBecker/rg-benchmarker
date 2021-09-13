@@ -45,7 +45,8 @@ def main(argv):
     parser.add_argument("--val_size", type=int, default=100, help="Validation set size") 
     parser.add_argument("--img_rows", type=int, default=300, help="Image row size") 
     parser.add_argument("--img_cols", type=int, default=300, help="Image column size")
-    parser.add_argument("--dataset", type=str, default="unLRG", help="Dataset to run on")
+    parser.add_argument("--data", type=str, default="unLRG_manifest", help="Dataset to run on")
+    parser.add_argument("--data_manifest", type=str, default="unset", help="Data manifest with all images and their classes")
     parser.add_argument("--architectures_file", type=str, default="architectures.txt", help="File with list of architectures to train or test")    
     parser.add_argument("--num_classes", type=int, default=4, help="Number of classes to be classified")
 
@@ -68,10 +69,11 @@ def main(argv):
     img_rows = opt.img_rows
     img_cols = opt.img_cols
     num_classes = opt.num_classes
+    MNIST_test = False
     # Manifest is a list of files and their classes
     if opt.data == "unLRG_manifest":
         data_manifest = "unLRG_manifest.csv"
-    elif opt.data == "unLRG_manifest":
+    elif opt.data == "LRG_manifest":
          data_manifest = "LRG_manifest.csv"
     elif opt.data == "MNIST":
         MNIST_test = True
@@ -191,6 +193,9 @@ def main(argv):
             dictionary_temp["IPS_std"] = ips_std
             results_dict[arch] = dictionary_temp
     print(results_dict)
+    f = open("results_dict_corrections_overfit.txt","a")
+    f.write(str(results_dict)+'\n')
+    f.close()
     # Make plots
     # generate_figures(results_dict, results_path, partition, labels)
 

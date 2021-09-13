@@ -1564,6 +1564,29 @@ def first_class(random_state,input_shape,num_classes):
     model.add(Activation('softmax'))
     return model
 
+def first_class_regularized(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3,3), padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2,2), strides=2))
+    model.add(Dropout(0.25,seed=random_state))
+    model.add(Conv2D(64, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+    model.add(Dropout(0.25,seed=random_state))
+    model.add(Conv2D(194, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=2,name='final_output'))
+    model.add(Dropout(0.25,seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(194, kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5,seed=random_state))
+    model.add(Dense(num_classes, kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('softmax'))
+    return model
+
 def atlas(random_state,input_shape,num_classes):
     # Paper Title: Radio Galaxy Zoo: Machine learning for radio source host galaxycross-identification
     # Primary Author: M.J. Alger
