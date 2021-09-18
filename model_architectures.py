@@ -993,6 +993,40 @@ def toothless_real(random_state,input_shape,num_classes):
     model.add(Activation('softmax'))
     return model
 
+def toothless_real_regularized(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(96, kernel_size=(11,11), padding='valid', strides=4,input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3,3), strides=2,padding='valid'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(256, (5, 5), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3), strides=2,padding='valid'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(384, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(384, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3), strides=2,padding='valid'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(4096, kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(4096, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5, seed=random_state))  
+    model.add(Dense(num_classes, kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('softmax'))
+    return model
 
 def toothless_real_no_bn(random_state,input_shape,num_classes):
     
@@ -2604,6 +2638,40 @@ def vgg16_d_real(random_state,input_shape,num_classes):
     model.add(MaxPooling2D(pool_size=(2, 2),padding='valid',strides=2,name='final_output'))
     
 
+    model.add(Flatten())
+    model.add(Dense(4096, activation='relu', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(4096, activation='relu', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(num_classes, activation='softmax',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def vgg16_d_real_regularized(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(64, kernel_size=(3, 3),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(64, (3, 3),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D((2, 2),padding='valid',strides=2))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='valid',strides=2))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='valid',strides=2))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='valid',strides=2))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(512, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='valid',strides=2,name='final_output'))
+    model.add(Dropout(0.25, seed=random_state))
     model.add(Flatten())
     model.add(Dense(4096, activation='relu', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     model.add(Dropout(0.5, seed=random_state))
