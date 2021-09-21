@@ -181,7 +181,7 @@ def test_mnist(model_name, architecture, SEED, results_path, data_path, model_pa
     print(mpca)
     return cm, ncm, mpca, time_dif
 
-def train(model_name, architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols):
+def train(model_name, architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols, early_stop_epochs):
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
     assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -207,16 +207,22 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
     mcp_save = ModelCheckpoint(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5', save_best_only=True, monitor='val_loss', mode='min')
     # lr_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=4, min_delta=0.01)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                               patience=3, min_lr=1e-12, min_delta=0.01,mode='min')
+    callbacks_list = [mcp_save,reduce_lr]
+    if early_stop_epochs != -1:
+        print("Early stopping on, setting patience to "+str(early_stop_epochs)+" epochs")
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=early_stop_epochs, min_delta=0.01)
+        callbacks_list.append(early_stopping)
+    else:
+        print("Early stopping off")    
     model.compile(optimizer=opt,
         loss=loss_fn,
         metrics=['accuracy',lr_metric])
     f = open("loss_log_trainvsval.txt","a")
     f.write('Model_name,'+model_name+'\n')
     f.close()
-    history = model.fit(training_generator, validation_data=validation_generator, epochs=EP,callbacks=[mcp_save,reduce_lr,early_stopping],verbose=2)
+    history = model.fit(training_generator, validation_data=validation_generator, epochs=EP,callbacks=callbacks_list,verbose=2)
     # test_generator = DataGenerator(partition["test"], labels, data_path, label_map, SEED, tf.keras.backend.image_data_format(), img_rows=img_rows, img_cols=img_cols,shuffle=False,batch_size=32)
     model.save(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'_final.h5')
     # print(model.evaluate(test_generator, verbose=2))
@@ -241,13 +247,22 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     plt.savefig("loss_images_updated_learning/"+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+"_acc.png")
     plt.show()
     plt.clf()
+    # Getting a better value for loss without dropout
     train_results = model.evaluate(training_generator)
     val_results = model.evaluate(validation_generator)
+    # Log loss and acc ratios
     f = open(results_path+"/"+model_name+"_final.txt","a")
     f.write(model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'\n')
     f.write("train_loss: "+str(train_results[0])+'\n')
     f.write("val_loss: "+str(val_results[0])+'\n')
     f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+"_final.csv")
+    f = open(results_path+"/"+model_name+"_final.csv","a+")
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,Comp-P,FRI-P,FRII-P,Bent-P,Comp-R,FRI-R,FRII-R,Bent-R,Comp-F1,FRI-F1,FRII-F1,Bent-F1,\n")
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
     f.close()
     model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5',compile=False)
     model.compile(optimizer=opt,
@@ -262,6 +277,13 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     f.write("train_loss: "+str(train_results[0])+'\n')
     f.write("val_loss: "+str(val_results[0])+'\n')
     f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to arch CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+".csv")
+    f = open(results_path+"/"+model_name+".csv","a+")
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,Comp-P,FRI-P,FRII-P,Bent-P,Comp-R,FRI-R,FRII-R,Bent-R,Comp-F1,FRI-F1,FRII-F1,Bent-F1,\n")
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
     f.close()
 
 def test(model_name,architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols, final=False):
@@ -339,6 +361,19 @@ def test(model_name,architecture, SEED, results_path, data_path, model_path, par
     f.write(str(f1score_indep)+'\n')
     f.write("IPS:"+'\n')
     f.write(str(len(partition["test"])/time_dif)+'\n')
+    f.close()
+    if final:
+        f = open(results_path+"/"+model_name+"_final.csv","a")
+    else:
+        f = open(results_path+"/"+model_name+".csv","a")        
+    f.write(str(mpca)+',')
+    for i in precision_indep:
+        f.write(str(i)+',')
+    for i in recall_indep:
+        f.write(str(i)+',')
+    for i in f1score_indep:
+        f.write(str(i)+',')
+    f.write('\n')
     f.close()
     return cm, ncm, mpca, time_dif
 

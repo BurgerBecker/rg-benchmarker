@@ -49,7 +49,7 @@ def main(argv):
     parser.add_argument("--data_manifest", type=str, default="unset", help="Data manifest with all images and their classes")
     parser.add_argument("--architectures_file", type=str, default="architectures.txt", help="File with list of architectures to train or test")    
     parser.add_argument("--num_classes", type=int, default=4, help="Number of classes to be classified")
-
+    parser.add_argument("--early_stopping", type=int, default=-1, help="Adds early stopping with given epoch patience, default is off")
     try:
         opt = parser.parse_known_args()[0]
     except:
@@ -84,47 +84,6 @@ def main(argv):
         print("Please set the data manifest (list of files and their respective classes in CSV format)")
         sys.exit(0)
     only_test = opt.test
-    # for current_argument, current_value in arguments:
-    #     if current_argument in ("-a","--architectures"):
-    #         architectures_file = current_value
-    #     elif current_argument in ("-c","--num_classes"):
-    #         num_classes = int(current_value)
-    #     elif current_argument in ("-d","--data_path"):
-    #         data_path = current_value
-    #     elif current_argument in ("-f", "--data_manifest"):
-    #         data_manifest = current_value
-    #     elif current_argument in ("-h", "--help"):
-    #         print(__doc__)
-    #     elif current_argument in ("-i","--img_size"):
-    #         current_value = current_value.rstrip("()[]")
-    #         if ',' in current_value:
-    #             x = current_value.split(',')
-    #             img_rows = int(x[0])
-    #             img_cols = int(x[1])
-    #         else:
-    #             img_rows = int(current_value)
-    #     elif current_argument in ("-m", "--model_path"):
-    #         model_path = current_value
-    #     elif current_argument in ("-o", "--only_test"):
-    #         if current_value == "False":
-    #             only_test = False
-    #         else:
-    #             only_test = True
-    #     elif current_argument in ("-p", "--results_path"):
-    #         results_path = current_value
-    #     elif current_argument in ("-r","--rotate"):
-    #         rotate_factor = int(current_value)
-    #     elif current_argument in ("-s","--seed"):
-    #         seed = int(current_value)
-    #     elif current_argument in ("-t","--train_size"):
-    #         train_size = int(current_value)
-    #     elif current_argument in ("-v", "--val_size"):
-    #         val_size = int(current_value)
-    #     elif current_argument in ("-X", "--mnist"):
-    #         if current_value == "False":
-    #             MNIST_test = False
-    #         else:
-    #             MNIST_test = True
     
     print("Splitting train/validation/test data...")
     data_name = data_manifest.split(".")
@@ -157,7 +116,7 @@ def main(argv):
             dictionary_temp["Time"] = time_dif
             results_dict[arch+"_final"] = dictionary_temp
         elif only_test == False:
-            train(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            train(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols, opt.early_stopping)
             cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             dictionary_temp["MPCA"] = mpca
             dictionary_temp["Norm. Confusion Matrix"] = ncm
@@ -193,7 +152,7 @@ def main(argv):
             dictionary_temp["IPS_std"] = ips_std
             results_dict[arch] = dictionary_temp
     print(results_dict)
-    f = open("results_dict_corrections_overfit.txt","a")
+    f = open(results_path+"/results_dict_corrections_overfit.txt","a")
     f.write(str(results_dict)+'\n')
     f.close()
     # Make plots
