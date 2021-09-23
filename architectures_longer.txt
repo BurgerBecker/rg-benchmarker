@@ -5,7 +5,8 @@
 #alexnet_real_do_seed,1e-5,20
 #simple,1e-4,20
 #mcrgnet,1e-3,20
-fr_deep_no_bn,1e-4,20
+#fr_deep_no_bn,1e-4,20
+hosenie_bo_bn,1e-4,20
 #hosenie_dropout,1e-4,20
 #atlas,1e-4,20
 #fr_deep_real,1e-4,20

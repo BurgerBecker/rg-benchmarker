@@ -1983,6 +1983,30 @@ def atlas_softmax(random_state,input_shape,num_classes):
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
 
+def atlas_no_do(random_state,input_shape,num_classes):
+    # Paper Title: Radio Galaxy Zoo: Machine learning for radio source host galaxycross-identification
+    # Primary Author: M.J. Alger
+    # https://doi.org/10.1093/mnras/sty1308
+    # https://arxiv.org/pdf/1805.05540.pdf
+    # 18 May 2018
+    # Repo: https://github.com/chengsoonong/crowdastro/blob/master/notebooks/14_cnn.ipynb
+
+    #Notes: The activation function in the output layer was changed from sigmoid to softmax
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(10, 10),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(MaxPooling2D((5, 5),padding='same'))    
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(32, (10, 10), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
+    # model.add(Dropout(0.5, seed=random_state))
+    # This layer's activation was changed from sigmoid to softmax
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
 def atlas_erf(random_state,input_shape,num_classes):
     # Paper Title: Radio Galaxy Zoo: Machine learning for radio source host galaxycross-identification
     # Primary Author: M.J. Alger
