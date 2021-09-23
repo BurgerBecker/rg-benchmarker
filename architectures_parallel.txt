@@ -1,0 +1,4 @@
+# Document contains the architectures and their hyperparameters that will be run
+vgg16_d_real_regularized,1e-5,20
+#toothless_real_regularized,1e-5,20
+#alexnet_real_regularized,1e-4,20

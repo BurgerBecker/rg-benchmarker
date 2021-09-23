@@ -186,6 +186,7 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
     print("Training "+model_name)
+    print("Seed: "+str(SEED))
     os.environ['PYTHONHASHSEED']=str(SEED)
     random.seed(SEED)
     np.random.seed(SEED)
@@ -235,6 +236,7 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
+    os.system("mkdir -p loss_images_updated_learning")
     plt.savefig("loss_images_updated_learning/"+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+"_loss.png")
     plt.show()
     plt.clf()
@@ -247,6 +249,75 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
     plt.savefig("loss_images_updated_learning/"+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+"_acc.png")
     plt.show()
     plt.clf()
+    # Getting a better value for loss without dropout
+    train_results = model.evaluate(training_generator)
+    val_results = model.evaluate(validation_generator)
+    # Log loss and acc ratios
+    f = open(results_path+"/"+model_name+"_final.txt","a")
+    f.write(model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'\n')
+    f.write("train_loss: "+str(train_results[0])+'\n')
+    f.write("val_loss: "+str(val_results[0])+'\n')
+    f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+"_final.csv")
+    f = open(results_path+"/"+model_name+"_final.csv","a+")
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,Comp-P,FRI-P,FRII-P,Bent-P,Comp-R,FRI-R,FRII-R,Bent-R,Comp-F1,FRI-F1,FRII-F1,Bent-F1,\n")
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
+    f.close()
+    model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5',compile=False)
+    model.compile(optimizer=opt,
+        loss=loss_fn,
+        metrics=['accuracy',lr_metric])
+    train_results = model.evaluate(training_generator)
+    val_results = model.evaluate(validation_generator)
+    f = open(results_path+"/"+model_name+".txt","a")
+    f.write(model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'\n')
+    f.write("train_acc: "+str(train_results[1])+'\n')
+    f.write("val_acc: "+str(val_results[1])+'\n')
+    f.write("train_loss: "+str(train_results[0])+'\n')
+    f.write("val_loss: "+str(val_results[0])+'\n')
+    f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to arch CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+".csv")
+    f = open(results_path+"/"+model_name+".csv","a+")
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,Comp-P,FRI-P,FRII-P,Bent-P,Comp-R,FRI-R,FRII-R,Bent-R,Comp-F1,FRI-F1,FRII-F1,Bent-F1,\n")
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
+    f.close()
+
+def validation(model_name,architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols):
+    os.environ['PYTHONHASHSEED']=str(SEED)
+    random.seed(SEED)
+    np.random.seed(SEED)
+    tf.random.set_seed(SEED)
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+    os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+    label_map = get_class_label()
+    num_classes = len(label_map.keys())
+    training_generator = DataGenerator(partition["train"], labels, data_path, label_map, SEED, tf.keras.backend.image_data_format(),img_rows=img_rows, img_cols=img_cols, batch_size=32, shuffle=False)
+    validation_generator = DataGenerator(partition["validation"], labels, data_path, label_map, SEED, tf.keras.backend.image_data_format(), img_rows=img_rows, img_cols=img_cols, shuffle=False, batch_size=32)
+    LR = float(architecture[0])
+    LR = float(architecture[0])
+    EP = int(architecture[1])
+    input_shape = (img_rows, img_cols, 1)
+    model_call = getattr(mac, model_name)
+    # model = model_call(SEED,input_shape,num_classes)    
+    decay_rate = 0.1/EP    
+    opt = tf.keras.optimizers.Adam(learning_rate=LR)
+    lr_metric = get_lr_metric(opt)
+    loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
+    mcp_save = ModelCheckpoint(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5', save_best_only=True, monitor='val_loss', mode='min')
+    # lr_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
+                              patience=3, min_lr=1e-12, min_delta=0.01,mode='min')
+    callbacks_list = [mcp_save,reduce_lr]
+    model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'_final.h5',compile=False)
+    model.compile(optimizer=opt,
+        loss=loss_fn,
+        metrics=['accuracy',lr_metric])
     # Getting a better value for loss without dropout
     train_results = model.evaluate(training_generator)
     val_results = model.evaluate(validation_generator)

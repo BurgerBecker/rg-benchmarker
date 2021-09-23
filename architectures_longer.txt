@@ -5,9 +5,10 @@
 #alexnet_real_do_seed,1e-5,20
 #simple,1e-4,20
 #mcrgnet,1e-3,20
-#hosenie,1e-3,20
+fr_deep_no_bn,1e-4,20
+#hosenie_dropout,1e-4,20
 #atlas,1e-4,20
-#fr_deep_real,1e-3,20
+#fr_deep_real,1e-4,20
 #first_class,1e-4,20
 #radio_galaxy_zoo,1e-5,20
 #toothless_real,1e-6,20
@@ -17,8 +18,8 @@
 #vgg16_d_real_regularized,1e-5,20
 #vgg16_d_real,1e-5,20
 #toothless_real_regularized,1e-5,20
-vgg16_d_real,1e-5,20
-toothless_real,1e-5,20
-alexnet_real_do_seed,1e-4,20
+#vgg16_d_real,1e-5,20
+#toothless_real,1e-5,20
+#alexnet_real_do_seed,1e-4,20
 #vgg16_d_real_regularized,1e-4,20
 #alexnet_adapted,1e-4,20

@@ -23,7 +23,7 @@ from downloads import download_unLRG, download_LRG
 from read_architectures import read_architectures
 from results import generate_figures
 from make_splits import make_splits
-from train_test import train, test, train_mnist, test_mnist, time_test
+from train_test import train, test, validation, train_mnist, test_mnist, time_test
 import numpy as np
 import json
 import os.path
@@ -130,6 +130,7 @@ def main(argv):
             dictionary_temp["Time"] = time_dif
             results_dict[arch+"_final"] = dictionary_temp
         elif only_test == True:
+            validation(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             dictionary_temp["MPCA"] = mpca
             dictionary_temp["Norm. Confusion Matrix"] = ncm
