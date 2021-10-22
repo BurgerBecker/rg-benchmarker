@@ -86,15 +86,16 @@ def main(argv):
     only_test = opt.test
     
     print("Splitting train/validation/test data...")
-    data_name = data_manifest.split(".")
-    # Creates 2 dictionaries: one for train/val/test and one for class labels
-    if os.path.isfile("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json") == False:
-        partition, labels = make_splits(rotate_factor, data_path, data_manifest, seed, train_size=train_size, val_size=val_size, img_rows = img_rows, img_cols = img_cols, bin_thresh= opt.bin_thresh)
-        json.dump(partition, open("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
-        json.dump(labels, open("labels_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
-    else:
-        partition = json.load(open("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json"))
-        labels = json.load(open("labels_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json"))
+    if MNIST_test == False:
+        data_name = data_manifest.split(".")
+        # Creates 2 dictionaries: one for train/val/test and one for class labels
+        if os.path.isfile("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json") == False:
+            partition, labels = make_splits(rotate_factor, data_path, data_manifest, seed, train_size=train_size, val_size=val_size, img_rows = img_rows, img_cols = img_cols, bin_thresh= opt.bin_thresh)
+            json.dump(partition, open("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
+            json.dump(labels, open("labels_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json", "w"))
+        else:
+            partition = json.load(open("partition_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json"))
+            labels = json.load(open("labels_"+str(seed)+"_"+str(rotate_factor)+"_"+str(train_size)+"_"+str(val_size)+"_"+data_name[0]+".json"))
     # Read in architecture names and hyperparams to be trained
     architectures = read_architectures(architectures_file)
     results_dict = {}
@@ -102,14 +103,14 @@ def main(argv):
     for arch in architectures.keys():
         dictionary_temp = {}        
         if MNIST_test == True:
-            train_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
-            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
+            train_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, img_rows, img_cols)
+            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, img_rows, img_cols)
             dictionary_temp["MPCA"] = mpca
             dictionary_temp["Norm. Confusion Matrix"] = ncm
             dictionary_temp["Confusion Matrix"] = cm
             dictionary_temp["Time"] = time_dif
             results_dict[arch] = dictionary_temp
-            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols,final=True)
+            cm, ncm, mpca, time_dif = test_mnist(arch ,architectures[arch], seed, results_path, data_path, model_path, img_rows, img_cols,final=True)
             dictionary_temp["MPCA"] = mpca
             dictionary_temp["Norm. Confusion Matrix"] = ncm
             dictionary_temp["Confusion Matrix"] = cm

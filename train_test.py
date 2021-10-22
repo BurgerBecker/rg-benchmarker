@@ -55,7 +55,7 @@ def lr_scheduler(epoch, lr):
     else:
         return lr*tf.math.exp(-0.1)
 
-def train_mnist(model_name, architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols):
+def train_mnist(model_name, architecture, SEED, results_path, data_path, model_path, img_rows, img_cols):
     print("Training "+model_name)
     LR = float(architecture[0])
     EP = int(architecture[1])
@@ -98,7 +98,7 @@ def train_mnist(model_name, architecture, SEED, results_path, data_path, model_p
     mcp_save = ModelCheckpoint(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'_MNIST.h5', save_best_only=True, monitor='val_loss', mode='min')
     lr_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                              patience=3, min_lr=1e-10, min_delta=0.001,mode='min')
+                              patience=3, min_lr=1e-12, min_delta=0.001,mode='min')
     model.compile(optimizer=opt,
         loss=loss_fn,
         metrics=['accuracy',lr_metric])
@@ -116,9 +116,56 @@ def train_mnist(model_name, architecture, SEED, results_path, data_path, model_p
     mpca = mpca/num_classes
     mpca = mpca*100
     print(mpca)
+    #Testing
+    train_results = model.evaluate(x_train,y_train)
+    val_results = model.evaluate(x_val,y_val)
+    # Log loss and acc ratios
+    f = open(results_path+"/"+model_name+"_final_MNIST.txt","a")
+    f.write(model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'\n')
+    f.write("train_loss: "+str(train_results[0])+'\n')
+    f.write("val_loss: "+str(val_results[0])+'\n')
+    f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+"_final_MNIST.csv")
+    f = open(results_path+"/"+model_name+"_final.csv","a+")
+    metric_prf = ['-P','-R','-F1']
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,")
+        for metric_letter in metric_prf: 
+            for gg in range(num_classes):
+                f.write(str(gg)+metric_letter+',')
+        f.write('\n')
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
+    f.close()
+    model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'_MNIST.h5',compile=False)
+    model.compile(optimizer=opt,
+        loss=loss_fn,
+        metrics=['accuracy',lr_metric])
+    train_results = model.evaluate(x_train,y_train)
+    val_results = model.evaluate(x_val,y_val)
+    f = open(results_path+"/"+model_name+".txt","a")
+    f.write(model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'\n')
+    f.write("train_acc: "+str(train_results[1])+'\n')
+    f.write("val_acc: "+str(val_results[1])+'\n')
+    f.write("train_loss: "+str(train_results[0])+'\n')
+    f.write("val_loss: "+str(val_results[0])+'\n')
+    f.write("ratio: "+str(train_results[0]/val_results[0])+'\n')   
+    f.close()
+    # Write to arch CSV file
+    csv_exists = os.path.isfile(results_path+"/"+model_name+"_MNIST.csv")
+    f = open(results_path+"/"+model_name+"_MNIST.csv","a+")
+    if csv_exists == False:
+        f.write("Architectures,Seed,LearningRate,Epochs,train_acc,val_acc,train_loss,val_loss,loss_ratio,acc_ratio,MPCA,")
+        for metric_letter in metric_prf: 
+            for gg in range(num_classes):
+                f.write(str(gg)+metric_letter+',')
+        f.write('\n')
+    f.write(model_name+","+str(SEED)+","+str(LR)+","+str(EP)+","+str(train_results[1])+","+str(val_results[1])+","+str(train_results[0])+","+str(val_results[0])+","+str(train_results[0]/val_results[0])+","+str(train_results[1]/val_results[1])+",")
+    f.close()
     return cm, ncm, mpca
 
-def test_mnist(model_name, architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols, final=False):
+def test_mnist(model_name, architecture, SEED, results_path, data_path, model_path, img_rows, img_cols, final=False):
     LR = float(architecture[0])
     EP = int(architecture[1])
     os.environ['PYTHONHASHSEED']=str(SEED)
@@ -179,6 +226,32 @@ def test_mnist(model_name, architecture, SEED, results_path, data_path, model_pa
     mpca = mpca/num_classes
     mpca = mpca*100
     print(mpca)
+    precision_indep = []
+    recall_indep = []
+    f1score_indep = []
+    matrixN = ncm
+    for i in range(num_classes):
+        precision_sum = 0
+        recall_sum = 0
+        for j in range(num_classes):
+            precision_sum = matrixN[j,i] + precision_sum
+            recall_sum = matrixN[i,j] + recall_sum
+        precision_indep.append(matrixN[i,i]/precision_sum)
+        recall_indep.append(matrixN[i,i]/recall_sum)
+        f1score_indep.append((2*precision_indep[i]*recall_indep[i])/(precision_indep[i]+recall_indep[i]))
+    if final:
+        f = open(results_path+"/"+model_name+"_final_MNIST.csv","a")
+    else:
+        f = open(results_path+"/"+model_name+"_MNIST.csv","a")        
+    f.write(str(mpca)+',')
+    for i in precision_indep:
+        f.write(str(i)+',')
+    for i in recall_indep:
+        f.write(str(i)+',')
+    for i in f1score_indep:
+        f.write(str(i)+',')
+    f.write('\n')
+    f.close()
     return cm, ncm, mpca, time_dif
 
 def train(model_name, architecture, SEED, results_path, data_path, model_path, partition, labels, img_rows, img_cols, early_stop_epochs):

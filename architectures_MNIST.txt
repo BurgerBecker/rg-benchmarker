@@ -1,0 +1,7 @@
+# Document contains the architectures and their hyperparameters that will be run
+#vgg16_d_real_same,1e-6,20
+#vgg16_d_real_regularized,1e-6,20
+toothless_real_regularized,1e-5,20
+conv4,1e-5,20
+first_class,1e-4,20
+toothless_real,1e-6,20
