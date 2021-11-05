@@ -656,6 +656,44 @@ def mcrgnet_no_do(random_state,input_shape,num_classes):
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
 
+def mcrgnet_no_conv_do(random_state,input_shape,num_classes):
+    # Model name: MCRGNet (Morphological Classification of Radio Galaxy Network) 
+    # Title: A Machine Learning Based Morphological Classification of 14,245 Radio AGN's Selected from the Best-Heckman Sample
+    # Links to Article:
+    # https://iopscience.iop.org/article/10.3847/1538-4365/aaf9a2
+    # https://arxiv.org/pdf/1812.07190.pdf
+    # Publication date: 5 Feb 2019
+    # Primary Author: Zhixian Ma
+
+    # Architecture description: (Page 5, figure 2 b) https://iopscience.iop.org/article/10.3847/1538-4365/aaf9a2/pdf#page=5
+
+    # Source code link:
+    # https://github.com/myinxd/MCRGNet/blob/master/mcrgnet/ConvAE.py
+
+    # Notes: Although the original article used an autoencoder for pretraining the CNN, we only train the CNN architecture described.
+    # Our reason for this is computational constraints on retraining 10 times on different data splits in the original fashion. 
+    # The original training strategy used is quite interesting and we recommend that the reader investigate the article.
+
+    # The architecture defined here is adapted from the article description and not the Github repo
+    # for the purpose of clarity.
+    
+    model = Sequential()
+    model.add(Conv2D(8, kernel_size=(3,3), strides = 2, activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(8, (3, 3), strides = 2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(16, (3, 3), strides = 2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(16, (3, 3), strides = 2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(32, (3, 3), strides = 2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')) 
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
 def mcrgnet_linear_no_do(random_state,input_shape,num_classes):
     # Model name: MCRGNet (Morphological Classification of Radio Galaxy Network) 
     # Title: A Machine Learning Based Morphological Classification of 14,245 Radio AGN's Selected from the Best-Heckman Sample
@@ -1145,6 +1183,93 @@ def conv4(random_state,input_shape,num_classes):
     model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
     model.add(Flatten())
     model.add(Dense(500, activation='linear',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
+    model.add(Dropout(0.5, seed=random_state))   
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def conv4_no_do(random_state,input_shape,num_classes):
+    # Model name: ConvNet 4
+    # Title: Morphological classification of radio galaxies: capsule networks versus convolutional neural networks
+    # Links to article:
+    # https://academic.oup.com/mnras/article-abstract/487/2/1729/5492264?redirectedFrom=fulltext
+    # https://arxiv.org/pdf/1905.03274.pdf
+    # Publication date: August 2019
+    # Primary Author: V. Lukic
+
+    # Architecture description: (Page 8, table 3) https://arxiv.org/pdf/1905.03274.pdf#page=8
+
+    # Source code link:
+    # https://github.com/vlukic973/RadioGalaxy_Conv_Caps/blob/master/convnet_LOFAR_radio_galaxy.py
+    
+    model = Sequential()
+    model.add(Conv2D(16, kernel_size=(5, 5),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(16, (5, 5),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    model.add(Flatten())
+    model.add(Dense(500, activation='linear',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
+    model.add(Dropout(0.5, seed=random_state))   
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def conv4_l2_no_do(random_state,input_shape,num_classes):
+    # Model name: ConvNet 4
+    # Title: Morphological classification of radio galaxies: capsule networks versus convolutional neural networks
+    # Links to article:
+    # https://academic.oup.com/mnras/article-abstract/487/2/1729/5492264?redirectedFrom=fulltext
+    # https://arxiv.org/pdf/1905.03274.pdf
+    # Publication date: August 2019
+    # Primary Author: V. Lukic
+
+    # Architecture description: (Page 8, table 3) https://arxiv.org/pdf/1905.03274.pdf#page=8
+
+    # Source code link:
+    # https://github.com/vlukic973/RadioGalaxy_Conv_Caps/blob/master/convnet_LOFAR_radio_galaxy.py
+    
+    model = Sequential()
+    model.add(Conv2D(16, kernel_size=(5, 5),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(16, (5, 5),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
+    model.add(Dropout(0.5, seed=random_state))   
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def conv4_l2_do(random_state,input_shape,num_classes):
+    # Model name: ConvNet 4
+    # Title: Morphological classification of radio galaxies: capsule networks versus convolutional neural networks
+    # Links to article:
+    # https://academic.oup.com/mnras/article-abstract/487/2/1729/5492264?redirectedFrom=fulltext
+    # https://arxiv.org/pdf/1905.03274.pdf
+    # Publication date: August 2019
+    # Primary Author: V. Lukic
+
+    # Architecture description: (Page 8, table 3) https://arxiv.org/pdf/1905.03274.pdf#page=8
+
+    # Source code link:
+    # https://github.com/vlukic973/RadioGalaxy_Conv_Caps/blob/master/convnet_LOFAR_radio_galaxy.py
+    
+    model = Sequential()
+    model.add(Conv2D(16, kernel_size=(5, 5),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(16, (5, 5),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(16, (5, 5), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
     model.add(Dropout(0.5, seed=random_state))   
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
@@ -2722,6 +2847,30 @@ def atlas_no_do(random_state,input_shape,num_classes):
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
 
+def atlas_no_conv_do(random_state,input_shape,num_classes):
+    # Paper Title: Radio Galaxy Zoo: Machine learning for radio source host galaxycross-identification
+    # Primary Author: M.J. Alger
+    # https://doi.org/10.1093/mnras/sty1308
+    # https://arxiv.org/pdf/1805.05540.pdf
+    # 18 May 2018
+    # Repo: https://github.com/chengsoonong/crowdastro/blob/master/notebooks/14_cnn.ipynb
+
+    #Notes: The activation function in the output layer was changed from sigmoid to softmax
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(10, 10),activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(MaxPooling2D((5, 5),padding='same'))    
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(32, (10, 10), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')) 
+    model.add(Dropout(0.5, seed=random_state))
+    # This layer's activation was changed from sigmoid to softmax
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
 def atlas_linear_no_do(random_state,input_shape,num_classes):
     # Paper Title: Radio Galaxy Zoo: Machine learning for radio source host galaxycross-identification
     # Primary Author: M.J. Alger
@@ -3202,6 +3351,34 @@ def convXpress(random_state,input_shape,num_classes):
     model.add(Dropout(0.25, seed=random_state))
     model.add(Flatten())
     model.add(Dense(500, activation='linear',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def convXpress_l2_no_do(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3, 3),strides=2,activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(64, (3, 3),strides=2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     model.add(Dropout(0.5, seed=random_state))
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
@@ -4093,6 +4270,31 @@ def vgg16_d_mod(random_state,input_shape,num_classes):
     model.add(Dense(500, activation='linear',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     model.add(Dropout(0.5, seed=random_state))
     model.add(Dense(num_classes, activation='softmax',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def maslej(random_state,input_shape,num_classes):
+    #https://academic.oup.com/mnras/article-abstract/505/1/1464/6276747?redirectedFrom=fulltext
+    #https://github.com/VieraMaslej/RadioGalaxy
+    
+    inputs = Input(shape=input_shape)
+    a = tf.keras.layers.Conv2D(128, kernel_size = (3,3), padding = "valid", strides=(2, 2), activation='relu')(inputs)
+    a = tf.keras.layers.Flatten()(a)
+
+    b = tf.keras.layers.Conv2D(64, kernel_size = (4,4), padding = "valid", activation='relu')(inputs)
+    b = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(b)
+    b = tf.keras.layers.Flatten()(b)
+
+    c = tf.keras.layers.Conv2D(64, kernel_size = (2,2), padding = "valid", activation='relu')(inputs)
+    c = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(c)
+    c = tf.keras.layers.Flatten()(c)
+    
+    x = tf.keras.layers.concatenate([a, b, c])
+    x = tf.keras.layers.Dropout(0.2)(x)
+    x = tf.keras.layers.Dense(128, activation='relu')(x)
+    output = tf.keras.layers.Dense(units = num_classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=output)
+
     return model
 
 # Architecture Template
