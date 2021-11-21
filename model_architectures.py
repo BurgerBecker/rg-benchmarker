@@ -1709,6 +1709,38 @@ def toothless_real(random_state,input_shape,num_classes):
     model.add(Activation('softmax'))
     return model
 
+def toothless_no_do_no_bn(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(96, kernel_size=(11,11), padding='valid', strides=4,input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3,3), strides=2,padding='valid'))
+    model.add(Conv2D(256, (5, 5), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3), strides=2,padding='valid'))
+    model.add(Conv2D(384, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(384, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (3, 3), padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3), strides=2,padding='valid'))
+    model.add(Flatten())
+    model.add(Dense(4096, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(4096, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5, seed=random_state))  
+    model.add(Dense(num_classes, kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Activation('softmax'))
+    return model
+
 def toothless_linear_no_do(random_state,input_shape,num_classes):
     
     model = Sequential()
@@ -3355,6 +3387,34 @@ def convXpress(random_state,input_shape,num_classes):
     model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
     return model
 
+def convXpress_l2_do(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3, 3),strides=2,activation='relu',padding='same',input_shape=input_shape, kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(64, (3, 3),strides=2, activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
 def convXpress_l2_no_do(random_state,input_shape,num_classes):
     
     model = Sequential()
@@ -3375,6 +3435,34 @@ def convXpress_l2_no_do(random_state,input_shape,num_classes):
     # model.add(Dropout(0.25, seed=random_state))
     model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
     model.add(Conv2D(256, (3, 3), activation='relu',padding='same', kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Flatten())
+    model.add(Dense(500, activation='relu',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    model.add(Dropout(0.5, seed=random_state))
+    model.add(Dense(num_classes, activation='softmax', kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros'))
+    return model
+
+def convXpress_l2_full(random_state,input_shape,num_classes):
+    
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=(3, 3),strides=2,activation='relu',padding='same',input_shape=input_shape, kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros',name='conv2d_input'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(32, (3, 3),activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D((2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(64, (3, 3),strides=2, activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(64, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(128, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+    # model.add(Dropout(0.25, seed=random_state))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
+    model.add(Conv2D(256, (3, 3), activation='relu',padding='same',kernel_regularizer=regularizers.l2(0.01), kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros'))
     model.add(MaxPooling2D(pool_size=(2, 2),padding='same',name='final_output'))
     # model.add(Dropout(0.25, seed=random_state))
     model.add(Flatten())
@@ -4277,25 +4365,82 @@ def maslej(random_state,input_shape,num_classes):
     #https://github.com/VieraMaslej/RadioGalaxy
     
     inputs = Input(shape=input_shape)
-    a = tf.keras.layers.Conv2D(128, kernel_size = (3,3), padding = "valid", strides=(2, 2), activation='relu')(inputs)
+    a = tf.keras.layers.Conv2D(128, kernel_size = (3,3), padding = "valid", strides=(2, 2), activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
     a = tf.keras.layers.Flatten()(a)
 
-    b = tf.keras.layers.Conv2D(64, kernel_size = (4,4), padding = "valid", activation='relu')(inputs)
+    b = tf.keras.layers.Conv2D(64, kernel_size = (4,4), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
     b = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(b)
     b = tf.keras.layers.Flatten()(b)
 
-    c = tf.keras.layers.Conv2D(64, kernel_size = (2,2), padding = "valid", activation='relu')(inputs)
+    c = tf.keras.layers.Conv2D(64, kernel_size = (2,2), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
     c = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(c)
     c = tf.keras.layers.Flatten()(c)
     
     x = tf.keras.layers.concatenate([a, b, c])
     x = tf.keras.layers.Dropout(0.2)(x)
-    x = tf.keras.layers.Dense(128, activation='relu')(x)
-    output = tf.keras.layers.Dense(units = num_classes, activation='softmax')(x)
+    x = tf.keras.layers.Dense(128, activation='relu',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
+    output = tf.keras.layers.Dense(units = num_classes, activation='softmax',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=output)
 
     return model
+
+
+def maslej_l2_no_do(random_state,input_shape,num_classes):
+    #https://academic.oup.com/mnras/article-abstract/505/1/1464/6276747?redirectedFrom=fulltext
+    #https://github.com/VieraMaslej/RadioGalaxy
+    
+    inputs = Input(shape=input_shape)
+    a = tf.keras.layers.Conv2D(128, kernel_size = (3,3), padding = "valid", strides=(2, 2), activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    a = tf.keras.layers.Flatten()(a)
+
+    b = tf.keras.layers.Conv2D(64, kernel_size = (4,4), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    b = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(b)
+    b = tf.keras.layers.Flatten()(b)
+
+    c = tf.keras.layers.Conv2D(64, kernel_size = (2,2), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    c = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(c)
+    c = tf.keras.layers.Flatten()(c)
+    
+    x = tf.keras.layers.concatenate([a, b, c])
+    # x = tf.keras.layers.Dropout(0.2)(x)
+    x = tf.keras.layers.Dense(128, activation='relu',kernel_regularizer=regularizers.l2(0.01),kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    output = tf.keras.layers.Dense(units = num_classes, activation='softmax',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=output)
+
+    return model
+
+def maslej_l2_do(random_state,input_shape,num_classes):
+    #https://academic.oup.com/mnras/article-abstract/505/1/1464/6276747?redirectedFrom=fulltext
+    #https://github.com/VieraMaslej/RadioGalaxy
+    
+    inputs = Input(shape=input_shape)
+    a = tf.keras.layers.Conv2D(128, kernel_size = (3,3), padding = "valid", strides=(2, 2), activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    a = tf.keras.layers.Dropout(0.5)(a)
+    a = tf.keras.layers.Flatten()(a)
+
+    b = tf.keras.layers.Conv2D(64, kernel_size = (4,4), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    b = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(b)
+    b= tf.keras.layers.Dropout(0.5)(b)
+    b = tf.keras.layers.Flatten()(b)
+
+    c = tf.keras.layers.Conv2D(64, kernel_size = (2,2), padding = "valid", activation='relu',kernel_initializer=initializers.he_normal(seed=random_state),bias_initializer='zeros')(inputs)
+    c = tf.keras.layers.MaxPooling2D(pool_size=(2,2))(c)
+    c = tf.keras.layers.Dropout(0.5)(c)
+    c = tf.keras.layers.Flatten()(c)
+    
+    x = tf.keras.layers.concatenate([a, b, c])
+    # x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.Dense(128, activation='relu',kernel_regularizer=regularizers.l2(0.01),kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    output = tf.keras.layers.Dense(units = num_classes, activation='softmax',kernel_initializer=initializers.glorot_uniform(seed=random_state),bias_initializer='zeros')(x)
+
+    model = tf.keras.Model(inputs=inputs, outputs=output)
+
+    return model
+
 
 # Architecture Template
 # Build and test your own network 

@@ -18,6 +18,7 @@ from astropy.io import fits
 import tensorflow.keras.datasets.mnist as mnist
 import time
 import matplotlib.pyplot as plt
+import io
 # import loss_callback
 
 # class RealTrainLossCallback(Callback):
@@ -289,7 +290,7 @@ def train(model_name, architecture, SEED, results_path, data_path, model_path, p
         early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=early_stop_epochs, min_delta=0.01)
         callbacks_list.append(early_stopping)
     else:
-        print("Early stopping off")    
+        print("Early stopping off")
     model.compile(optimizer=opt,
         loss=loss_fn,
         metrics=['accuracy',lr_metric])
@@ -575,4 +576,244 @@ def time_test(model_name,architecture, SEED, results_path, data_path, model_path
     print(ips)
     return time_dif, ips, np.average(time_dif), np.std(time_dif), np.average(ips), np.std(ips)
 
+def get_model_summary(model):
+    #Source: User: Pasa https://stackoverflow.com/a/53937848
+    #Purpose: convert Keras model summary to string
+    stream = io.StringIO()
+    model.summary(print_fn=lambda x: stream.write(x + '\n'))
+    summary_string = stream.getvalue()
+    stream.close()
+    return summary_string
 
+def count_params(model_summary_string):
+    dense = 0
+    conv = 0
+    flatten = 0
+    split_string = model_summary_string.split('\n')
+    for line in split_string:
+        parenthesis_split = line.split(')')
+        if len(parenthesis_split) == 3:
+            if 'Dense' in parenthesis_split[0]:
+                dense+= int(parenthesis_split[2])
+            elif 'Conv2D' in parenthesis_split[0]:
+                conv+= int(parenthesis_split[2])
+            elif 'Flatten' in parenthesis_split[0]:
+                print(parenthesis_split[1].split(' ')[-1])
+                flatten = int(parenthesis_split[1].split(' ')[-1])
+        if "Trainable params: " in line:
+            trainable_params = line.split(" ")[2]
+    return dense, conv, flatten, trainable_params
+
+def model_parameters(model_name,architecture, SEED, model_path, img_rows, img_cols):
+    print("Model summary of "+model_name)
+    LR = float(architecture[0])
+    EP = int(architecture[1])
+    if tf.keras.backend.image_data_format() == 'channels_first':
+        input_shape = (1, img_rows, img_cols)
+    else:
+        input_shape = (img_rows, img_cols, 1)
+    label_map = get_class_label()
+    num_classes = len(label_map.keys())
+    model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5',compile=False)
+    model_summary_string = get_model_summary(model)
+    print(model_summary_string)
+    dense,conv,flatten,trainable_params = count_params(model_summary_string)
+    print('Conv: '+str(conv))
+    print('Flatten: '+str(flatten))
+    print('Dense: '+str(dense))
+    print('Total: '+str(dense+conv))
+    return dense, conv, flatten,trainable_params
+
+# def get_flops(model_name,architecture, SEED, model_path, img_rows, img_cols):
+#     session = tf.compat.v1.Session()
+#     graph = tf.compat.v1.get_default_graph()
+        
+
+#     with graph.as_default():
+#         LR = float(architecture[0])
+#         EP = int(architecture[1])
+#         with session.as_default():
+#             model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5',compile=False)
+
+#             run_meta = tf.compat.v1.RunMetadata()
+#             opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+        
+#             # We use the Keras session graph in the call to the profiler.
+#             flops = tf.compat.v1.profiler.profile(graph=graph,
+#                                                   run_meta=run_meta, cmd='op', options=opts)
+#             print(flops.total_float_ops)
+#             return flops.total_float_ops
+
+def numel(w : list):
+    out = 1
+    for k in w:
+        out *= k
+    return out
+
+def compute_input_flops(layer, macs = False):
+    return 0
+def compute_padding_flops(layer, macs = False):
+    return 0
+def compute_activation_flops(layer, macs = False):
+    return 0
+def compute_tfop_flops(layer, macs = False):
+    return 0
+def compute_add_flops(layer, macs = False):
+    return 0
+
+def compute_conv2d_flops(layer, macs = False):
+    
+#     _, cin, h, w = input_shape
+    if layer.data_format == "channels_first":
+        _, input_channels, _, _ = layer.input_shape
+        _, output_channels, h, w, = layer.output_shape
+    elif layer.data_format == "channels_last":
+        _, _, _, input_channels = layer.input_shape
+        _, h, w, output_channels = layer.output_shape
+    
+    w_h, w_w =  layer.kernel_size
+
+#     flops = h * w * output_channels * input_channels * w_h * w_w / (stride**2)
+    flops = h * w * output_channels * input_channels * w_h * w_w
+
+    
+    if not macs:
+        flops_bias = numel(layer.output_shape[1:]) if layer.use_bias is not None else 0
+        flops = 2 * flops + flops_bias
+        
+    return int(flops)
+    
+
+def compute_fc_flops(layer, macs = False):
+    ft_in, ft_out =  layer.input_shape[-1], layer.output_shape[-1]
+    flops = ft_in * ft_out
+    
+    if not macs:
+        flops_bias = ft_out if layer.use_bias is not None else 0
+        flops = 2 * flops + flops_bias
+        
+    return int(flops)
+
+def compute_bn2d_flops(layer, macs = False):
+    # subtract, divide, gamma, beta
+    flops = 2 * numel(layer.input_shape[1:])
+    
+    if not macs:
+        flops *= 2
+    
+    return int(flops)
+
+
+def compute_relu_flops(layer, macs = False):
+    
+    flops = 0
+    if not macs:
+        flops = numel(layer.input_shape[1:])
+
+    return int(flops)
+
+
+def compute_maxpool2d_flops(layer, macs = False):
+
+    flops = 0
+    if not macs:
+        flops = layer.pool_size[0]**2 * numel(layer.output_shape[1:])
+
+    return flops
+
+
+def compute_pool2d_flops(layer, macs = False):
+
+    flops = 0
+    if not macs:
+        flops = layer.pool_size[0]**2 * numel(layer.output_shape[1:])
+
+    return flops
+
+def compute_globalavgpool2d_flops(layer, macs = False):
+
+    if layer.data_format == "channels_first":
+        _, input_channels, h, w = layer.input_shape
+        _, output_channels = layer.output_shape
+    elif layer.data_format == "channels_last":
+        _, h, w, input_channels = layer.input_shape
+        _, output_channels = layer.output_shape
+
+    return h*w
+
+def compute_softmax_flops(layer, macs = False):
+    
+    nfeatures = numel(layer.input_shape[1:])
+    
+    total_exp = nfeatures # https://stackoverflow.com/questions/3979942/what-is-the-complexity-real-cost-of-exp-in-cmath-compared-to-a-flop
+    total_add = nfeatures - 1
+    total_div = nfeatures
+    
+    flops = total_div + total_exp
+    
+    if not macs:
+        flops += total_add
+        
+    return flops
+
+def dropout_flops(layer,macs):
+    return 0
+
+def flatten_flops(layer,macs):
+    return 0
+
+def save_flops(layer, flops, conv_flops, dense_flops, macs=False):
+    get_flops_dict = {'ReLU': compute_relu_flops,
+                'InputLayer': compute_input_flops,
+                'Conv2D': compute_conv2d_flops,
+                'ZeroPadding2D': compute_padding_flops,
+                'Activation': compute_activation_flops,
+                'Dense': compute_fc_flops,
+                'BatchNormalization': compute_bn2d_flops,
+                'TensorFlowOpLayer': compute_tfop_flops,
+                'MaxPooling2D': compute_pool2d_flops,
+                'Add': compute_add_flops,
+                'GlobalAveragePooling2D': compute_globalavgpool2d_flops,
+                'Dropout':dropout_flops,
+                'Flatten':flatten_flops}
+    flops_layer = get_flops_dict[layer.__class__.__name__](layer, macs)
+    # if macs:
+    #     macs.append(flops)
+    # else:
+    flops.append(flops_layer)       
+    return flops
+        
+
+def get_stats(model, flops = False, macs = False):
+    
+    # if params:
+    #     self.count_params()
+   
+    if flops:
+        flops_arr = []
+        conv_flops = []
+        dense_flops = []
+    
+    # if macs:
+    #     macs = []
+
+    if flops:
+        for layer in model.layers:
+            flops_arr = save_flops(layer, flops_arr,conv_flops, dense_flops)
+    # if macs:
+    #     for layer in model.layers:
+    #         save_flops(layer, macs=True)
+    total = sum(flops_arr)
+    return flops_arr, total
+
+def get_flops(model_name,architecture, SEED, model_path, img_rows, img_cols):
+    LR = float(architecture[0])
+    EP = int(architecture[1])
+    model = load_model(model_path+model_name+'_'+str(SEED)+'_'+str(LR)+'_'+str(EP)+'.h5',compile=False)
+
+    
+
+    flops, total = get_stats(model, flops = True, macs = False)
+    print(flops, total)
+    #insert flopco call here
+    return total

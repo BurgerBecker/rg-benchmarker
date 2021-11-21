@@ -55,3 +55,12 @@ This will first augment your data and then start training, after which the resul
 Final results will be in the last lines of the file.
 
 [^1]: The Dockerfile will mount the FITS folder (so don't change the name) and will eventually use it to save augmentations on disk (which will use an additional 3.169 GB). This is useful when training all the models, since they reuse the same data and it saves quite a bit of time and compute. This is probably less useful when training a single model, since this will generate and save 24 augmented images for each of the 350 training/validation images. That's 24 x 350 x 377.3 KB = 3.169 GB on top of the existing 5.3GB. -->
+
+## Training and Replicability
+All training for our study was performed on a Nvidia Tesla V100 32GB. Our architectures were constructed using the Deep Learning framework, Keras. To ensure replicable results we provided a random seed to all non-deterministic processes. In addition to this step, Tensorflow requires you to set the `TF_CUDNN_DETERMINISTIC` environment variable to `1` or `TRUE` (alternatively, depending on the version of Tensorflow being used, either the Nvidia Tensorflow-Determinism patch can be applied or the `TF_DETERMINISTIC_OPS` environment variable must be set (see https://pypi.org/project/tensorflow-determinism/). A customized version of the Keras Data Generator class was used to load images during training, validation and testing.
+
+Available at:
+
+https://academic.oup.com/mnras/article-abstract/503/2/1828/6129789
+
+https://arxiv.org/abs/2102.03780

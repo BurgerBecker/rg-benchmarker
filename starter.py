@@ -23,7 +23,7 @@ from downloads import download_unLRG, download_LRG
 from read_architectures import read_architectures
 from results import generate_figures
 from make_splits import make_splits
-from train_test import train, test, validation, train_mnist, test_mnist, time_test
+from train_test import train, test, validation, train_mnist, test_mnist, time_test, model_parameters, get_flops
 import numpy as np
 import json
 import os.path
@@ -39,7 +39,7 @@ def main(argv):
     parser.add_argument("--final", type=bool, default=True, help="Final model or best validation")
     parser.add_argument("--results_path", type=str, default="rg_results_corrections/", help="Path to results")
     parser.add_argument("--bin_thresh", type=bool, default=False, help="Binary threshold of images") 
-    parser.add_argument("--test", type=bool, default=False, help="Only test the models")
+    parser.add_argument("--test", type=str, default="False", help="Only test the models")
     parser.add_argument("--rotate", type=int, default=15, help="Angle of rotational augmentation") 
     parser.add_argument("--train_size", type=int, default=250, help="Training set size") 
     parser.add_argument("--val_size", type=int, default=100, help="Validation set size") 
@@ -83,7 +83,12 @@ def main(argv):
     else:
         print("Please set the data manifest (list of files and their respective classes in CSV format)")
         sys.exit(0)
+    # if opt.test != "True" or opt.test != "False":
     only_test = opt.test
+    # elif opt.test == "True":
+        # only_test = "True"
+    # elif opt.test == "False":
+        # only_test = "False"
     
     print("Splitting train/validation/test data...")
     if MNIST_test == False:
@@ -116,7 +121,8 @@ def main(argv):
             dictionary_temp["Confusion Matrix"] = cm
             dictionary_temp["Time"] = time_dif
             results_dict[arch+"_final"] = dictionary_temp
-        elif only_test == False:
+        elif only_test == "False":
+            print("Starting Training")
             train(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols, opt.early_stopping)
             cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             dictionary_temp["MPCA"] = mpca
@@ -130,7 +136,8 @@ def main(argv):
             dictionary_temp["Confusion Matrix"] = cm
             dictionary_temp["Time"] = time_dif
             results_dict[arch+"_final"] = dictionary_temp
-        elif only_test == True:
+        elif only_test == "True":
+            print("Starting Testing")
             validation(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             cm, ncm, mpca, time_dif = test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             dictionary_temp["MPCA"] = mpca
@@ -145,6 +152,7 @@ def main(argv):
             dictionary_temp["Time"] = time_dif
             results_dict[arch+"_final"] = dictionary_temp
         elif only_test == "time":
+            print("Starting Timing")
             time_arr, ips_arr, time_dif, time_std, ips, ips_std = time_test(arch ,architectures[arch], seed, results_path, data_path, model_path, partition, labels, img_rows, img_cols)
             dictionary_temp["IPS"] = ips
             dictionary_temp["Time"] = time_dif
@@ -153,10 +161,35 @@ def main(argv):
             dictionary_temp["Time_std"] = time_std
             dictionary_temp["IPS_std"] = ips_std
             results_dict[arch] = dictionary_temp
+        elif only_test == "parameters":
+            dense, conv, flatten, trainable_params = model_parameters(arch ,architectures[arch], seed, model_path, img_rows, img_cols)
+            dictionary_temp["conv"] = conv
+            dictionary_temp["dense"] = dense
+            dictionary_temp["flatten"] = flatten
+            dictionary_temp["trainable_params"] = trainable_params
+            results_dict[arch] = dictionary_temp
+        elif only_test == "flops":
+            flops = get_flops(arch ,architectures[arch], seed, model_path, img_rows, img_cols)
+            dictionary_temp["flops"] = flops            
+            results_dict[arch] = dictionary_temp
     print(results_dict)
-    f = open(results_path+"/results_dict_corrections_overfit.txt","a")
-    f.write(str(results_dict)+'\n')
-    f.close()
+    if opt.test == "time":
+        f = open(results_path+"/times_new.txt","a")
+        f.write(str(results_dict)+'\n')
+        f.close()
+    elif opt.test == "parameters":
+        f = open(results_path+"/parameter_summary.txt","a")
+        f.write(str(results_dict)+'\n')
+        f.close()
+    elif opt.test == "flops":
+        f = open(results_path+"/flops_summary.txt","a")
+        f.write(str(results_dict)+'\n')
+        f.close()
+    else:
+        f = open(results_path+"/results_dict_corrections_overfit.txt","a")
+        f.write(str(results_dict)+'\n')
+        f.close()
+        
     # Make plots
     # generate_figures(results_dict, results_path, partition, labels)
 
